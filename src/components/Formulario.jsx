@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 
 const perguntas = [
@@ -18,36 +17,68 @@ const perguntas = [
 
 export default function Formulario() {
   const [respostas, setRespostas] = useState({});
+  const [feedback, setFeedback] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
   const handleChange = (e) => {
     setRespostas({ ...respostas, [e.target.name]: e.target.value });
   };
 
-  const analisarRespostas = () => {
-    alert("Futuramente a IA fará uma análise aqui com base nas suas respostas.");
+  const analisarRespostas = async () => {
+    setCarregando(true);
+    const prompt = `Abaixo estão respostas de um formulário chamado Protocolo de Combate ao Medo. Gere um feedback analítico e resumido com foco em: origem e padrão do medo, distorções cognitivas, ações práticas possíveis e nova visão alternativa.\n\nRespostas:\n${Object.entries(respostas)
+      .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
+      .join("\n")}`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      }),
+    });
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Erro na resposta da IA.";
+    setFeedback(reply);
+    setCarregando(false);
   };
 
   return (
-    <form className="space-y-4">
-      {perguntas.map((p) => (
-        <div key={p.id}>
-          <label className="block font-semibold">{p.label}</label>
-          <textarea
-            name={p.id}
-            value={respostas[p.id] || ""}
-            onChange={handleChange}
-            className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
-            rows={3}
-          />
-        </div>
-      ))}
+    <div className="space-y-4">
+      <form className="space-y-4">
+        {perguntas.map((p) => (
+          <div key={p.id}>
+            <label className="block font-semibold">{p.label}</label>
+            <textarea
+              name={p.id}
+              value={respostas[p.id] || ""}
+              onChange={handleChange}
+              className="w-full mt-1 p-2 border border-gray-300 rounded-lg"
+              rows={3}
+            />
+          </div>
+        ))}
+      </form>
       <button
         type="button"
         onClick={analisarRespostas}
+        disabled={carregando}
         className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
       >
-        Analisar com IA
+        {carregando ? "Analisando..." : "Analisar com IA"}
       </button>
-    </form>
+      {feedback && (
+        <div className="mt-6 p-4 bg-green-100 border border-green-400 rounded-lg whitespace-pre-line">
+          <h2 className="font-bold text-lg mb-2">Feedback da IA:</h2>
+          <p>{feedback}</p>
+        </div>
+      )}
+    </div>
   );
 }
