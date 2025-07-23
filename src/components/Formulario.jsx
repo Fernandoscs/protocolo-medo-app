@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 
 const perguntas = [
@@ -26,9 +27,7 @@ export default function Formulario() {
 
   const analisarRespostas = async () => {
     setCarregando(true);
-    const prompt = `Abaixo estão respostas de um formulário chamado Protocolo de Combate ao Medo. Gere um feedback analítico e resumido com foco em: origem e padrão do medo, distorções cognitivas, ações práticas possíveis e nova visão alternativa.\n\nRespostas:\n${Object.entries(respostas)
-      .map(([k, v]) => `${k.toUpperCase()}: ${v}`)
-      .join("\n")}`;
+    const prompt = `Abaixo estão respostas de um formulário chamado Protocolo de Combate ao Medo. Gere um feedback analítico e resumido com foco em: origem e padrão do medo, distorções cognitivas, ações práticas possíveis e nova visão alternativa.\n\nRespostas:\n${Object.entries(respostas).map(([k, v]) => `${k.toUpperCase()}: ${v}`).join("\n")}`;
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
